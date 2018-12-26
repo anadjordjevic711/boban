@@ -3,7 +3,10 @@ var Boban = function(scene, emitter) {
     this.health = 100;
     this.happines = 100;
     this.quotes = [
-        "Cao, ja sam Boban!"
+        "Get busy living or get busy dying. - Stephen King",
+        "The only impossible journey is the one you never begin. - Anthony Robbins",
+        "Life is trying things to see if they work. - Ray Bradbury",
+        "If you want to be happy, be. - Leo Tolstoy",
     ];
 
     this.currentAction = "";
@@ -13,7 +16,9 @@ var Boban = function(scene, emitter) {
         healthDegradationStep: 1,
         happinesDegradationInterval: 1000, // ms
         happinesDegradationStep: 5,
-        ageIncreaseInterval: 1000 * 60 * 60 * 24 // day
+        ageIncreaseInterval: 1000 * 60 * 60 * 24, // day
+        randomQuoteInterval: 1000, // ms
+        randomQuoteChance: 15 // %
     }
 
     this.EventEmitter = emitter;
@@ -26,8 +31,11 @@ var Boban = function(scene, emitter) {
         this.healthText = this.scene.add.text(100, 15, 'Zdravlje: 100%', { color: '#00ff00' });
         this.happinesText = this.scene.add.text(100, 30, 'Sreca: 100%', { color: '#f4c542' });
 
-        this.quoteText = this.scene.add.text(400, 250, 'Cao', { color: '#000000' })
-
+        // this.quoteText = this.scene.add.text(400, 250, 'Cao', { color: '#ff0000' });
+        this.quoteText = this.scene.add.text(100, 200, 'Cao', { font: "15px Arial", fill: "#ff0000", align: "center" });
+        //
+        // his.quoteTextEn = this.scene.add.text(100, 100, 'Cao', { font: "15px Arial", fill: "#0000ff", align: "center" });
+        this.randomQuotes();
         this.EventEmitter.on('ModifyHealth', this.modifyHealth, this);
         this.EventEmitter.on('ModifyHappines', this.modifyHeappines, this);
 
@@ -54,6 +62,7 @@ var Boban = function(scene, emitter) {
             "BOBAN SE POSTAJE!!!",
             "Zato ja imam 5 godina, a sta je pre toga bilo niko ne zna"
         ]);
+
     }
 
     this.idle = function() {
@@ -125,6 +134,18 @@ var Boban = function(scene, emitter) {
                 self.unpause();
             }
         }, this)
+    }
+
+    this.randomQuotes = function() {
+        var self = this;
+
+        setInterval(function () {
+            var random = Math.floor(Math.random() * 100);
+            if (random <= self.settings.randomQuoteChance) {
+                var quote = Math.floor(Math.random() * self.quotes.length);
+                self.talk(self.quotes[quote]);
+            }
+        }, self.settings.randomQuoteInterval);
     }
 
     this.pause = function() {
