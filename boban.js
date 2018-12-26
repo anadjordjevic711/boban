@@ -134,4 +134,31 @@ var Boban = function(scene, emitter) {
     this.unpause = function() {
         this.paused = false;
     }
+    
+    this.eat = function () {
+        var pizzasprite = this.scene.add.sprite(400, 300, 'pizza01');
+        var chew = this.scene.sound.add('chew');
+        var slurp = this.scene.sound.add('slurp');
+        var burp = this.scene.sound.add('burp');
+
+        chew.play();
+        pizzasprite.play('eatpizza');
+
+        pizzasprite.on('animationcomplete', function () {
+            var sodasprite = this.scene.add.sprite(400, 300, 'soda');
+            chew.stop();
+            sodasprite.play('drinksoda');
+            slurp.play();
+
+            sodasprite.on('animationcomplete', function () {
+                slurp.stop();
+                burp.play();
+                sodasprite.destroy();
+                pizzasprite.destroy();
+                this.modifyHealth(Math.min(self.health + 25, 100));
+            });
+        }, this);
+
+
+    }
 }
