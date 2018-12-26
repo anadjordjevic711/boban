@@ -17,7 +17,6 @@ var config = {
 };
 
 var boban;
-var pizza;
 var game = new Phaser.Game(config);
 
 function preload ()
@@ -28,15 +27,17 @@ function preload ()
         frameHeight: 85,
     });
 
+    this.load.spritesheet('char_friend', 'assets/friend.png', { 
+        frameWidth: 27, 
+        frameHeight: 57
+    });
+
     boban = new Boban(this, (new Phaser.Events.EventEmitter()));
-    pizza = new Pizza(this);
-    pizza.preload();
 }
 
 function create ()
 {
     boban.spawn()
-    pizza.create();
 }
 
 function update()

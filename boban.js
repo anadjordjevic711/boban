@@ -2,11 +2,9 @@ var Boban = function(scene, emitter) {
     this.age = 5;
     this.health = 100;
     this.happines = 100;
+    this.social = 100;
     this.quotes = [
-        "Get busy living or get busy dying. - Stephen King",
-        "The only impossible journey is the one you never begin. - Anthony Robbins",
-        "Life is trying things to see if they work. - Ray Bradbury",
-        "If you want to be happy, be. - Leo Tolstoy",
+        "Cao, ja sam Boban!"
     ];
 
     this.currentAction = "";
@@ -16,9 +14,11 @@ var Boban = function(scene, emitter) {
         healthDegradationStep: 1,
         happinesDegradationInterval: 1000, // ms
         happinesDegradationStep: 5,
-        ageIncreaseInterval: 1000 * 60 * 60 * 24, // day
-        randomQuoteInterval: 1000, // ms
-        randomQuoteChance: 15 // %
+        socialIncreaseStep: 10,
+        socialIncreaseInterval: 3000,
+        socialDegradationInterval: 3000,
+        socialDegradationStep: 5,
+        ageIncreaseInterval: 1000 * 60 * 60 * 24 // day
     }
 
     this.EventEmitter = emitter;
@@ -30,14 +30,14 @@ var Boban = function(scene, emitter) {
         this.ageText = this.scene.add.text(100, 0, 'Godina: 5', { color: '#000000' });
         this.healthText = this.scene.add.text(100, 15, 'Zdravlje: 100%', { color: '#00ff00' });
         this.happinesText = this.scene.add.text(100, 30, 'Sreca: 100%', { color: '#f4c542' });
+        this.socialText = this.scene.add.text(100, 45, 'Socijalizacija: 100%', { color: '#f4c542' });
+        
 
-        // this.quoteText = this.scene.add.text(400, 250, 'Cao', { color: '#ff0000' });
-        this.quoteText = this.scene.add.text(100, 200, 'Cao', { font: "15px Arial", fill: "#ff0000", align: "center" });
-        //
-        // his.quoteTextEn = this.scene.add.text(100, 100, 'Cao', { font: "15px Arial", fill: "#0000ff", align: "center" });
-        this.randomQuotes();
+        this.quoteText = this.scene.add.text(400, 250, 'Cao', { color: '#000000' });
+
         this.EventEmitter.on('ModifyHealth', this.modifyHealth, this);
-        this.EventEmitter.on('ModifyHappines', this.modifyHeappines, this);
+        this.EventEmitter.on('ModifyHappines', this.modifyHappines, this);
+        this.EventEmitter.on('ModifySocial', this.modifySocial, this);
 
         setInterval(function() {
             if (! self.paused) {
@@ -52,17 +52,26 @@ var Boban = function(scene, emitter) {
             }
             
         }, self.settings.happinesDegradationInterval)
+
+        setInterval(function() {
+            console.log(self.currentAction);
+            if (! self.paused && self.currentAction !== "Socialize") {
+                self.EventEmitter.emit('ModifySocial', self.social - self.settings.socialDegradationStep);
+            }
+            
+        }, self.settings.socialDegradationInterval)
         
 
         this.idle();
 
-        this.interactiveTalk([
-            "Cao, ja sam Boban! Dozvoli mi da se predstavim",
-            "Kao sto sam rekao ja sam Boban, Boban se ne radja",
-            "BOBAN SE POSTAJE!!!",
-            "Zato ja imam 5 godina, a sta je pre toga bilo niko ne zna"
-        ]);
+        // this.interactiveTalk([
+        //     "Cao, ja sam Boban! Dozvoli mi da se predstavim",
+        //     "Kao sto sam rekao ja sam Boban, Boban se ne radja",
+        //     "BOBAN SE POSTAJE!!!",
+        //     "Zato ja imam 5 godina, a sta je pre toga bilo niko ne zna"
+        // ]);
 
+       
     }
 
     this.idle = function() {
@@ -86,6 +95,54 @@ var Boban = function(scene, emitter) {
         sprite.anims.play('idle');
     }
 
+    this.friend = function() {
+        var self = this; 
+        if(this.currentAction == 'Socialize') {
+            clearInterval(this.socialInterval);
+            this.friend_vlada.destroy();
+            this.quoteFriend.setText('');
+            self.quoteText.setText('');
+            document.getElementsByClassName("call-friend")[0].innerText = 'Zovi Vladu';
+            this.currentAction = '';
+        }
+
+        else {
+            this.currentAction = "Socialize";
+            document.getElementsByClassName("call-friend")[0].innerText = 'Otkaci Vladu';
+
+            var config = {
+                key: 'friend',
+                frames: this.scene.anims.generateFrameNumbers('char_friend'),
+                frameRate: 2,
+                yoyo: true,
+                repeat: -1
+            };
+            
+            anim = this.scene.anims.create(config);
+        
+            this.friend_vlada = this.scene.add.sprite(530, 355, 'char_friend').setScale(1.6);
+        
+            sprite.originX = 0;
+            sprite.originY = 0;
+        
+            this.friend_vlada.anims.load('friend');
+        
+            this.friend_vlada.anims.play('friend');
+
+            this.quoteFriend = this.scene.add.text(500, 250, '&#@%$%@%*!*', { color: '#000000' });
+            self.quoteText = this.scene.add.text(380, 250, '@&^#*&^@*#', { color: '#000000' });
+
+        
+            this.socialInterval = setInterval(function() {
+                if (! self.paused && self.currentAction !== "Socialize") {
+                    self.EventEmitter.emit('ModifySocial', self.social + self.settings.socialIncreaseStep);
+                }
+                
+            }, self.settings.socialIncreaseInterval);
+            
+        }
+    }
+
     this.modifyHealth = function(number) {
         this.health = number;
         this.healthText.setText('Zdravlje: ' + this.health + '%');
@@ -96,9 +153,18 @@ var Boban = function(scene, emitter) {
         }   
     }
 
-    this.modifyHeappines = function(number) {
+    this.modifyHappines = function(number) {
         this.happines = number;
         this.happinesText.setText('Sreca: ' + this.happines + '%');  
+    }
+
+    this.modifySocial = function(number) {
+        this.social = number;
+        this.socialText.setText('Socijalizacija: ' + this.social + '%');  
+    }
+
+    this.callFriends = function() {
+        console.log('friend called');
     }
 
     this.talk = function(text) {
@@ -120,6 +186,7 @@ var Boban = function(scene, emitter) {
 
     this.interactiveTalk = function(text) {
         var self = this;
+        this.currentAction = 'InteractiveTalk'
         this.pause();
 
         var counter = 0;
@@ -132,20 +199,9 @@ var Boban = function(scene, emitter) {
                 this.quoteText.setText(text[counter]);
             } else {
                 self.unpause();
+                self.currentAction = '';
             }
         }, this)
-    }
-
-    this.randomQuotes = function() {
-        var self = this;
-
-        setInterval(function () {
-            var random = Math.floor(Math.random() * 100);
-            if (random <= self.settings.randomQuoteChance) {
-                var quote = Math.floor(Math.random() * self.quotes.length);
-                self.talk(self.quotes[quote]);
-            }
-        }, self.settings.randomQuoteInterval);
     }
 
     this.pause = function() {
@@ -154,32 +210,5 @@ var Boban = function(scene, emitter) {
 
     this.unpause = function() {
         this.paused = false;
-    }
-    
-    this.eat = function () {
-        var pizzasprite = this.scene.add.sprite(400, 300, 'pizza01');
-        var chew = this.scene.sound.add('chew');
-        var slurp = this.scene.sound.add('slurp');
-        var burp = this.scene.sound.add('burp');
-
-        chew.play();
-        pizzasprite.play('eatpizza');
-
-        pizzasprite.on('animationcomplete', function () {
-            var sodasprite = this.scene.add.sprite(400, 300, 'soda');
-            chew.stop();
-            sodasprite.play('drinksoda');
-            slurp.play();
-
-            sodasprite.on('animationcomplete', function () {
-                slurp.stop();
-                burp.play();
-                sodasprite.destroy();
-                pizzasprite.destroy();
-                this.modifyHealth(Math.min(self.health + 25, 100));
-            });
-        }, this);
-
-
     }
 }
